@@ -17,23 +17,25 @@ public class MainRouter extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-
-      
-        from("timer://producer?period=1000")
-                .process(new Processor() {
-                    public void process(Exchange exchange) throws Exception {
-                        String message = UUID.randomUUID().toString();
-                        producerTemplate.sendBody("kafka:{{kafka.topic}}?brokers={{kafka.server}}:{{kafka.port}}", message);
-                    }
-                });
-        
-        from("kafka:{{kafka.topic}}?brokers={{kafka.server}}:{{kafka.port}}&groupId={{kafka.channel}}")
+    	
+    	 from("timer://producer?period=10000")
+        .process(new Processor() {
+			public void process(Exchange exchange) throws Exception {
+				String message = UUID.randomUUID().toString();
+				log.info("****************Sending Message*****************");
+				log.info("Receive message '{}' from queue.", message.toString());
+				//producerTemplate.sendBody("kafka:{{kafka.topic}}?brokers={{kafka.host}}:{{kafka.port}}&groupId={{kafka.channel}}",message);
+				producerTemplate.sendBody("kafka:{{kafka.topic}}", message);
+			}
+        });
+        from("kafka:{{kafka.topic}}")
+        //from("kafka:{{kafka.topic}}"+"?brokers={{kafka.host}}:{{kafka.port}}&groupId={{kafka.channel}}")
         .process(new Processor() {
             public void process(Exchange exchange) throws Exception {
-                System.out.println("Message Body : " + exchange.getIn().getBody());
+            	String message = exchange.getIn().getBody(String.class);
+				log.info("****************Reseiving Message****************");
+				log.info("Receive message '{}' from queue.", message.toString());
             }
         });
-
-
     }
 }
